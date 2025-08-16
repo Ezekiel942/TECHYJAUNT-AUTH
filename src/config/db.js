@@ -1,12 +1,23 @@
-const mongoose = require('mongoose')
-const dotenv = require('dotenv')
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
 
 dotenv.config();
-// Connect to MongoDB database
+
 const connectDB = async () => {
-  const uri = "mongodb://localhost:27017/here";
-  await mongoose.connect(uri);
-  console.log("MongoDB connected");
+  try {
+    // 👇 If MONGODB_URI is set (Render), use it. Otherwise fallback to local.
+    const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/mydb';
+
+    await mongoose.connect(uri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+
+    console.log(`✅ MongoDB connected: ${uri}`);
+  } catch (error) {
+    console.error("❌ MongoDB connection failed:", error.message);
+    process.exit(1);
+  }
 };
 
 module.exports = connectDB;
