@@ -1,76 +1,75 @@
 const express = require("express");
 const router = express.Router();
 
-const Flutterwave = require("flutterwave-node-v3");
+const Flutterwave = require('flutterwave-node-v3');
+
+// Check for environment variables to prevent initialization errors
+if (!process.env.FLW_PUBLIC_KEY || !process.env.FLW_SECRET_KEY) {
+  console.error("Flutterwave API keys are not set. Please check your .env file or Render environment variables.");
+}
+
 const flw = new Flutterwave(process.env.FLW_PUBLIC_KEY, process.env.FLW_SECRET_KEY);
 
-// Initialize payment
+// 🚀 Initialize Payment
 router.post("/pay", async (req, res) => {
   try {
     const { email, amount, name } = req.body;
 
     if (!email || !amount || !name) {
-      return res.status(400).json({ status: "error", message: "Missing required fields" });
+      return res.status(400).json({ status: "error", message: "Missing fields: email, amount, name." });
     }
 
-    const tx_ref = "TX-" + Date.now(); // unique transaction reference
-
     const payload = {
-      tx_ref,
+      tx_ref: "TX-" + Date.now(),
       amount,
       currency: "NGN",
       payment_options: "card, banktransfer, ussd",
-      redirect_url: "https://your-backend.onrender.com/api/payments/callback", //auto verify
+      redirect_url: "https://techyjaunt.onrender.com/api/payments/verify",
       customer: {
         email,
         phonenumber: "08012345678",
         name,
       },
       customizations: {
-        title: "TechyJaunt Payment",
-        description: "Payment for services",
+        title: "TechyJaunt Car Rental",
+        description: "Payment for car rental",
         logo: "https://yourdomain.com/logo.png",
       },
     };
 
+    // Correcting the method call. The Flutterwave SDK requires
+    // calling initialize directly on the flw object.
     const response = await flw.Payment.initialize(payload);
 
     if (response.status === "success" && response.data && response.data.link) {
-      return res.status(200).json({ status: "success", link: response.data.link });
+      return res.json({ status: "success", link: response.data.link });
     } else {
-      return res.status(400).json({ status: "error", message: response.message || "Failed to initialize payment" });
+      return res.status(400).json({ status: "error", message: response.message });
     }
   } catch (error) {
-    console.error("Payment Init Error:", error.message);
+    console.error("Flutterwave Init Error:", error.message);
     res.status(500).json({ status: "error", message: error.message });
   }
 });
 
-//Auto-verify after Flutterwave redirects here
-router.get("/callback", async (req, res) => {
+// 🚀 Verify Payment
+router.get("/verify", async (req, res) => {
   try {
-    const { transaction_id } = req.query; // Flutterwave adds this automatically
+    const { transaction_id } = req.query;
 
     if (!transaction_id) {
-      return res.status(400).json({ status: "error", message: "Transaction ID missing" });
+      return res.status(400).json({ status: "error", message: "Transaction ID is required" });
     }
 
     const response = await flw.Transaction.verify({ id: transaction_id });
 
     if (response.data.status === "successful") {
-      // TODO: save payment record to DB here
-      console.log("Payment verified:", response.data);
-
-      return res.json({
-        status: "success",
-        message: "Payment verified successfully",
-        data: response.data,
-      });
-    } else {
-      return res.json({ status: "failed", message: "Payment failed", data: response.data });
+      return res.json({ status: "success", data: response.data });
     }
+
+    res.json({ status: "failed", data: response.data });
   } catch (error) {
-    console.error("Callback Verify Error:", error.message);
+    console.error("Flutterwave Verify Error:", error.message);
     res.status(500).json({ status: "error", message: error.message });
   }
 });
