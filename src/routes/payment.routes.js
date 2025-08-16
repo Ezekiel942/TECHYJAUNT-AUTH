@@ -1,18 +1,14 @@
 const express = require("express");
-const Flutterwave = require('flutterwave-node-v3'); // Import the correct Flutterwave library
+const router = express.Router();  // ✅ define router
 
-// Instantiate Flutterwave with your environment variables
-// This should be done right after the require statements
+const Flutterwave = require('flutterwave-node-v3');
 const flw = new Flutterwave(process.env.FLW_PUBLIC_KEY, process.env.FLW_SECRET_KEY);
-
-const router = express.Router();
 
 // Initialize payment
 router.post("/pay", async (req, res) => {
   try {
     const { email, amount, name } = req.body;
 
-    // Check if required fields are present
     if (!email || !amount || !name) {
       return res.status(400).json({ status: "error", message: "Missing required fields: email, amount, or name." });
     }
@@ -20,9 +16,9 @@ router.post("/pay", async (req, res) => {
     const payload = {
       tx_ref: "TX-" + Date.now(),
       amount,
-      currency: "NGN", // change if needed
+      currency: "NGN",
       payment_options: "card, banktransfer, ussd",
-      redirect_url: "https://your-frontend.com/payment-callback", // your frontend callback page
+      redirect_url: "https://your-frontend.com/payment-callback",
       customer: {
         email,
         phonenumber: "08012345678",
@@ -35,12 +31,12 @@ router.post("/pay", async (req, res) => {
       },
     };
 
-    const response = await flw.Payment.initialize(payload);
+    const response = await flw.PaymentInitiation.initialize(payload); // ✅ FIXED
 
-    if (response.data && response.data.link) {
+    if (response.status === "success" && response.data && response.data.link) {
       res.status(200).json({
         status: "success",
-        link: response.data.link, // redirect user to this link
+        link: response.data.link,
       });
     } else {
       res.status(400).json({
@@ -55,13 +51,13 @@ router.post("/pay", async (req, res) => {
   }
 });
 
-// Verify payment after Flutterwave redirects back
+// Verify payment
 router.get("/verify", async (req, res) => {
   try {
     const { transaction_id } = req.query;
 
     if (!transaction_id) {
-        return res.status(400).json({ status: "error", message: "Transaction ID is missing." });
+      return res.status(400).json({ status: "error", message: "Transaction ID is missing." });
     }
 
     const response = await flw.Transaction.verify({ id: transaction_id });
