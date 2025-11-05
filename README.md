@@ -2,6 +2,164 @@
 
 Small README to run, test and deploy this project. It includes exact git commit/push commands and how to set environment variables for Render.
 
+## API Documentation
+
+### Authentication Endpoints
+
+#### 1. Sign Up
+```http
+POST /api/users/signup
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "yourpassword123"
+}
+```
+
+Response:
+```json
+{
+  "message": "User created successfully",
+  "token": "jwt_token_here"
+}
+```
+
+#### 2. Login
+```http
+POST /api/users/login
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "yourpassword123"
+}
+```
+
+Response:
+```json
+{
+  "token": "jwt_token_here",
+  "user": {
+    "id": "user_id",
+    "name": "John Doe",
+    "email": "john@example.com"
+  }
+}
+```
+
+### Car Management Endpoints
+
+#### 1. Get All Cars
+```http
+GET /api/cars
+Authorization: Bearer your_jwt_token
+```
+
+Response:
+```json
+{
+  "cars": [
+    {
+      "id": "car_id",
+      "make": "Toyota",
+      "model": "Camry",
+      "year": 2023,
+      "price": 50000,
+      "description": "Luxury sedan",
+      "color": "Silver",
+      "brand": "Toyota",
+      "isRented": false
+    }
+  ]
+}
+```
+
+#### 2. Add New Car (Admin Only)
+```http
+POST /api/cars
+Authorization: Bearer your_jwt_token
+Content-Type: application/json
+
+{
+  "make": "Toyota",
+  "model": "Camry",
+  "year": 2023,
+  "price": 50000,
+  "description": "Luxury sedan",
+  "color": "Silver",
+  "brand": "Toyota"
+}
+```
+
+Response:
+```json
+{
+  "message": "Car Added Successfully"
+}
+```
+
+### Rental Endpoints
+
+#### 1. Rent a Car
+```http
+POST /api/cars/rent
+Authorization: Bearer your_jwt_token
+Content-Type: application/json
+
+{
+  "carId": "car_id",
+  "email": "john@example.com",
+  "name": "John Doe"
+}
+```
+
+Response:
+```json
+{
+  "link": "flutterwave_payment_link"
+}
+```
+
+#### 2. Payment Verification
+```http
+GET /api/payments/verify?status=successful&tx_ref=TX_REF&transaction_id=TRANS_ID
+```
+
+Response:
+```json
+{
+  "message": "Payment successful and verified!"
+}
+```
+
+### Search Endpoints
+
+#### Search Cars by Make
+```http
+GET /api/cars/search?make=Toyota
+Authorization: Bearer your_jwt_token
+```
+
+Response:
+```json
+{
+  "car": [
+    {
+      "id": "car_id",
+      "make": "Toyota",
+      "model": "Camry",
+      "year": 2023,
+      "price": 50000,
+      "description": "Luxury sedan",
+      "color": "Silver",
+      "brand": "Toyota"
+    }
+  ]
+}
+```
+
 ## Quick local run
 
 1. Install dependencies:
