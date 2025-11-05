@@ -10,7 +10,7 @@ if (!process.env.FLW_PUBLIC_KEY || !process.env.FLW_SECRET_KEY) {
 
 const flw = new Flutterwave(process.env.FLW_PUBLIC_KEY, process.env.FLW_SECRET_KEY);
 
-// 🚀 Initialize Payment
+// Initialize Payment
 router.post("/pay", async (req, res) => {
   try {
     const { email, amount, name } = req.body;
