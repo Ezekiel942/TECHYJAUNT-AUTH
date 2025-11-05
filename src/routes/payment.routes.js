@@ -52,7 +52,7 @@ router.post("/pay", async (req, res) => {
   }
 });
 
-// 🚀 Verify Payment
+// Verify Payment
 router.get("/verify", async (req, res) => {
   try {
     const { transaction_id } = req.query;
